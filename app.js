@@ -81,10 +81,74 @@ function movePiece(fromRow, fromCol, toRow, toCol) {
         renderBoard();
         eliminateSurroundedPieces();
         renderBoard();
-        switchTurn();
-        aiMove();
+        if (!checkEndGame()) { // Only switch turn if the game hasn't ended
+            switchTurn();
+            aiMove();
+        }
     }
 }
+
+function checkEndGame() {
+    const corners = [
+        [0, 0], [0, 10], [10, 0], [10, 10]
+    ];
+
+    let isGameOver = false;
+
+    // Check if K reaches a corner
+    corners.forEach(([r, c]) => {
+        if (board[r][c] === pieces.K) {
+            endGame('Defenders have won!');
+            isGameOver = true;
+        }
+    });
+
+    // Check if K is surrounded by A on all four sides
+    board.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+            if (cell === pieces.K) {
+                const up = board[rowIndex - 1]?.[colIndex];
+                const down = board[rowIndex + 1]?.[colIndex];
+                const left = board[rowIndex]?.[colIndex - 1];
+                const right = board[rowIndex]?.[colIndex + 1];
+
+                if (up === pieces.A && down === pieces.A && left === pieces.A && right === pieces.A) {
+                    endGame('Attackers have won!');
+                    isGameOver = true;
+                }
+            }
+        });
+    });
+
+    return isGameOver;
+}
+
+function endGame(message) {
+    // Clear the board and display the end game message
+    const boardElement = document.getElementById('game-board');
+    boardElement.innerHTML = `<div class="end-game-message">${message}</div><button id="restart-button">Restart Game</button>`;
+    
+    // Add event listener for the restart button
+    document.getElementById('restart-button').addEventListener('click', restartGame);
+}
+
+function restartGame() {
+    // Reset the board to its initial state
+    board.forEach((row, rowIndex) => {
+        row.fill(null);
+    });
+
+    Object.keys(initialPositions).forEach(type => {
+        initialPositions[type].forEach(([row, col]) => {
+            board[row][col] = pieces[type];
+        });
+    });
+
+    currentPlayer = 'A'; // Reset the turn to the attackers
+    renderBoard();
+    updateTurnIndicator();
+}
+
 
 function isValidTurn(piece) {
     if (currentPlayer === 'A') {
@@ -183,23 +247,10 @@ function eliminateSurroundedPieces() {
                         }
                     }
                 });
-
-                // New check for K surrounded by A on all four sides
-                if (cell === pieces.K) {
-                    const up = board[rowIndex - 1]?.[colIndex];
-                    const down = board[rowIndex + 1]?.[colIndex];
-                    const left = board[rowIndex]?.[colIndex - 1];
-                    const right = board[rowIndex]?.[colIndex + 1];
-
-                    if (up === pieces.A && down === pieces.A && left === pieces.A && right === pieces.A) {
-                        board[rowIndex][colIndex] = null;
-                    }
-                }
             }
         });
     });
 }
-
 
 function aiMove() {
 }
