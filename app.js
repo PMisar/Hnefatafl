@@ -29,8 +29,6 @@ Object.keys(initialPositions).forEach(type => {
     });
 });
 
-console.log('Initial board state:', board);
-
 function renderBoard() {
     const boardElement = document.getElementById('game-board');
     boardElement.innerHTML = '';
@@ -48,7 +46,6 @@ function renderBoard() {
         });
     });
 }
-
 renderBoard();
 
 document.getElementById('game-board').addEventListener('click', (event) => {
@@ -81,9 +78,8 @@ function movePiece(fromRow, fromCol, toRow, toCol) {
         renderBoard();
         eliminateSurroundedPieces();
         renderBoard();
-        if (!checkEndGame()) { // Only switch turn if the game hasn't ended
+        if (!checkEndGame()) {
             switchTurn();
-            aiMove();
         }
     }
 }
@@ -95,7 +91,7 @@ function checkEndGame() {
 
     let isGameOver = false;
 
-    // Check if K reaches a corner
+    // Check if K reaches a corner (Defenders win)
     corners.forEach(([r, c]) => {
         if (board[r][c] === pieces.K) {
             endGame('Defenders have won!');
@@ -103,7 +99,7 @@ function checkEndGame() {
         }
     });
 
-    // Check if K is surrounded by A on all four sides
+    // Check if K is surrounded by A on all four sides (Attackers win)
     board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
             if (cell === pieces.K) {
@@ -116,24 +112,35 @@ function checkEndGame() {
                     endGame('Attackers have won!');
                     isGameOver = true;
                 }
+
+                if (isOnEdge(rowIndex, colIndex)) {
+                    const adjacent = [
+                        up, down, left, right
+                    ].filter(Boolean);
+                    const surroundingAttackers = adjacent.filter(piece => piece === pieces.A).length;
+                    if (surroundingAttackers === 3) {
+                        endGame('Attackers have won!');
+                        isGameOver = true;
+                    }
+                }
             }
         });
     });
-
     return isGameOver;
 }
 
+function isOnEdge(row, col) {
+    return row === 0 || row === boardSize - 1 || col === 0 || col === boardSize - 1;
+}
+
 function endGame(message) {
-    // Clear the board and display the end game message
     const boardElement = document.getElementById('game-board');
     boardElement.innerHTML = `<div class="end-game-message">${message}</div><button id="restart-button">Restart Game</button>`;
-    
-    // Add event listener for the restart button
+
     document.getElementById('restart-button').addEventListener('click', restartGame);
 }
 
 function restartGame() {
-    // Reset the board to its initial state
     board.forEach((row, rowIndex) => {
         row.fill(null);
     });
@@ -144,7 +151,7 @@ function restartGame() {
         });
     });
 
-    currentPlayer = 'A'; // Reset the turn to the attackers
+    currentPlayer = 'A';
     renderBoard();
     updateTurnIndicator();
 }
@@ -160,7 +167,7 @@ function isValidTurn(piece) {
 
 function switchTurn() {
     currentPlayer = currentPlayer === 'A' ? 'D' : 'A';
-    updateTurnIndicator();
+    // updateTurnIndicator();
 }
 
 function updateTurnIndicator() {
@@ -202,7 +209,6 @@ function isValidMove(fromRow, fromCol, toRow, toCol) {
         }
         return true;
     }
-
     return false;
 }
 
@@ -250,9 +256,6 @@ function eliminateSurroundedPieces() {
             }
         });
     });
-}
-
-function aiMove() {
 }
 
 function getPossibleMoves(row, col) {

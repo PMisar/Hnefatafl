@@ -1,3 +1,4 @@
+/* styles.css */
 @import url("https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap");
 
 body {
@@ -64,6 +65,7 @@ h1 {
   background-color: #f39c12;
   color: #fff;
   border: 2px solid #f1c40f;
+  z-index: 1;
 }
 
 .cell.selected {
@@ -77,6 +79,16 @@ h1 {
 
 .cell[data-piece] {
   cursor: pointer;
+}
+
+.cell[data-row="0"][data-col="0"], 
+.cell[data-row="0"][data-col="10"], 
+.cell[data-row="10"][data-col="0"], 
+.cell[data-row="10"][data-col="10"]
+/* , 
+.cell[data-row="5"][data-col="5"]  */ {
+  background-color: #2c3e50;
+  z-index: 2;
 }
 
 @media (max-width: 600px) {
