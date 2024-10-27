@@ -84,6 +84,37 @@ function movePiece(fromRow, fromCol, toRow, toCol) {
     }
 }
 
+// function eliminateSurroundedPieces() {
+//     const directions = [
+//         [-1, 0], // Up
+//         [1, 0],  // Down
+//         [0, -1], // Left
+//         [0, 1]   // Right
+//     ];
+
+//     board.forEach((row, rowIndex) => {
+//         row.forEach((cell, colIndex) => {
+//             if (cell) {
+//                 directions.forEach(([dRow, dCol]) => {
+//                     const adj1 = board[rowIndex + dRow]?.[colIndex + dCol];
+//                     const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
+//                     if (
+//                         adj1 && adj2 &&
+//                         adj1 !== cell && adj2 !== cell &&
+//                         (adj1 === pieces.A || adj1 === pieces.D || adj1 === pieces.K) &&
+//                         (adj2 === pieces.A || adj2 === pieces.D || adj2 === pieces.K)
+//                     ) {
+//                         if ((cell === pieces.A && adj1 === pieces.D && adj2 === pieces.D) ||
+//                             (cell === pieces.D && adj1 === pieces.A && adj2 === pieces.A)) {
+//                             board[rowIndex][colIndex] = null;
+//                         }
+//                     }
+//                 });
+//             }
+//         });
+//     });
+// }
+
 function eliminateSurroundedPieces() {
     const directions = [
         [-1, 0], // Up
@@ -94,26 +125,32 @@ function eliminateSurroundedPieces() {
 
     board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
-            if (cell) {
+            if (cell === pieces.A || cell === pieces.D) { // Check both A and D pieces
                 directions.forEach(([dRow, dCol]) => {
                     const adj1 = board[rowIndex + dRow]?.[colIndex + dCol];
                     const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
+
+                    // Eliminate D piece if surrounded by A pieces (A D A)
                     if (
-                        adj1 && adj2 &&
-                        adj1 !== cell && adj2 !== cell &&
-                        (adj1 === pieces.A || adj1 === pieces.D || adj1 === pieces.K) &&
-                        (adj2 === pieces.A || adj2 === pieces.D || adj2 === pieces.K)
+                        cell === pieces.D &&
+                        adj1 === pieces.A && adj2 === pieces.A
                     ) {
-                        if ((cell === pieces.A && adj1 === pieces.D && adj2 === pieces.D) ||
-                            (cell === pieces.D && adj1 === pieces.A && adj2 === pieces.A)) {
-                            board[rowIndex][colIndex] = null;
-                        }
+                        board[rowIndex][colIndex] = null; // Remove the D piece
+                    }
+
+                    // Eliminate A piece if surrounded by D and K pieces (D A K or K A D)
+                    if (
+                        cell === pieces.A &&
+                        ((adj1 === pieces.D && adj2 === pieces.K) || (adj1 === pieces.K && adj2 === pieces.D))
+                    ) {
+                        board[rowIndex][colIndex] = null; // Remove the A piece
                     }
                 });
             }
         });
     });
 }
+
 
 function checkEndGame() {
     const corners = [
@@ -139,15 +176,15 @@ function checkEndGame() {
                 const left = board[rowIndex]?.[colIndex - 1];
                 const right = board[rowIndex]?.[colIndex + 1];
 
+                // King surrounded by Attackers on all four sides
                 if (up === pieces.A && down === pieces.A && left === pieces.A && right === pieces.A) {
                     endGame('Attackers have won!');
                     isGameOver = true;
                 }
 
+                // King on edge, surrounded by Attackers on three sides
                 if (isOnEdge(rowIndex, colIndex)) {
-                    const adjacent = [
-                        up, down, left, right
-                    ].filter(Boolean);
+                    const adjacent = [up, down, left, right].filter(Boolean);
                     const surroundingAttackers = adjacent.filter(piece => piece === pieces.A).length;
                     if (surroundingAttackers === 3) {
                         endGame('Attackers have won!');
@@ -159,6 +196,7 @@ function checkEndGame() {
     });
     return isGameOver;
 }
+
 
 function isOnEdge(row, col) {
     return row === 0 || row === boardSize - 1 || col === 0 || col === boardSize - 1;
@@ -205,12 +243,22 @@ function updateTurnIndicator() {
     turnIndicator.textContent = `Current Turn: ${currentPlayer}`;
 }
 
+const specialTiles = [
+    [5, 5] 
+];
+
+
 function isValidMove(fromRow, fromCol, toRow, toCol) {
     const restrictedTiles = [
         [5, 5], [0, 0], [0, 10], [10, 0], [10, 10]
     ];
 
     if (restrictedTiles.some(([r, c]) => r === toRow && c === toCol) && board[fromRow][fromCol] !== pieces.K) {
+        return false;
+    }
+
+    // Check if the move is to the special tile and only allow King
+    if (specialTiles.some(([r, c]) => r === toRow && c === toCol) && board[fromRow][fromCol] !== pieces.K) {
         return false;
     }
 
@@ -241,6 +289,7 @@ function isValidMove(fromRow, fromCol, toRow, toCol) {
     }
     return false;
 }
+
 
 function highlightValidMoves(row, col) {
     clearHighlights();

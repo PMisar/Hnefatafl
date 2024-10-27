@@ -102,6 +102,16 @@ h1 {
   background-color: rgba(0, 100, 0, 0.3);
 }
 
+/* Exclude valid move styling for specific cells */
+.cell[data-row="0"][data-col="0"].valid-move,
+.cell[data-row="0"][data-col="10"].valid-move,
+.cell[data-row="10"][data-col="0"].valid-move,
+.cell[data-row="10"][data-col="10"].valid-move,
+.cell[data-row="5"][data-col="5"].valid-move {
+  border: 2px solid #7b5841;
+  background-color: #1e2a36;
+}
+
 .cell[data-piece] {
   cursor: pointer;
 }
@@ -109,10 +119,10 @@ h1 {
 .cell[data-row="0"][data-col="0"],
 .cell[data-row="0"][data-col="10"],
 .cell[data-row="10"][data-col="0"],
-.cell[data-row="10"][data-col="10"] {
+.cell[data-row="10"][data-col="10"],
+.cell[data-row="5"][data-col="5"] {
   background-color: #1e2a36;
   z-index: 2;
-  background-image: url("https://example.com/viking-rune-symbol.png");
   background-size: 80%;
   background-repeat: no-repeat;
   background-position: center;
