@@ -84,6 +84,37 @@ function movePiece(fromRow, fromCol, toRow, toCol) {
     }
 }
 
+function eliminateSurroundedPieces() {
+    const directions = [
+        [-1, 0], // Up
+        [1, 0],  // Down
+        [0, -1], // Left
+        [0, 1]   // Right
+    ];
+
+    board.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+            if (cell) {
+                directions.forEach(([dRow, dCol]) => {
+                    const adj1 = board[rowIndex + dRow]?.[colIndex + dCol];
+                    const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
+                    if (
+                        adj1 && adj2 &&
+                        adj1 !== cell && adj2 !== cell &&
+                        (adj1 === pieces.A || adj1 === pieces.D || adj1 === pieces.K) &&
+                        (adj2 === pieces.A || adj2 === pieces.D || adj2 === pieces.K)
+                    ) {
+                        if ((cell === pieces.A && adj1 === pieces.D && adj2 === pieces.D) ||
+                            (cell === pieces.D && adj1 === pieces.A && adj2 === pieces.A)) {
+                            board[rowIndex][colIndex] = null;
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
+
 function checkEndGame() {
     const corners = [
         [0, 0], [0, 10], [10, 0], [10, 10]
@@ -167,7 +198,6 @@ function isValidTurn(piece) {
 
 function switchTurn() {
     currentPlayer = currentPlayer === 'A' ? 'D' : 'A';
-    // updateTurnIndicator();
 }
 
 function updateTurnIndicator() {
@@ -224,37 +254,6 @@ function highlightValidMoves(row, col) {
 function clearHighlights() {
     document.querySelectorAll('.cell').forEach(cell => {
         cell.classList.remove('selected', 'valid-move');
-    });
-}
-
-function eliminateSurroundedPieces() {
-    const directions = [
-        [-1, 0], // Up
-        [1, 0],  // Down
-        [0, -1], // Left
-        [0, 1]   // Right
-    ];
-
-    board.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-            if (cell) {
-                directions.forEach(([dRow, dCol]) => {
-                    const adj1 = board[rowIndex + dRow]?.[colIndex + dCol];
-                    const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
-                    if (
-                        adj1 && adj2 &&
-                        adj1 !== cell && adj2 !== cell &&
-                        (adj1 === pieces.A || adj1 === pieces.D || adj1 === pieces.K) &&
-                        (adj2 === pieces.A || adj2 === pieces.D || adj2 === pieces.K)
-                    ) {
-                        if ((cell === pieces.A && adj1 === pieces.D && adj2 === pieces.D) ||
-                            (cell === pieces.D && adj1 === pieces.A && adj2 === pieces.A)) {
-                            board[rowIndex][colIndex] = null;
-                        }
-                    }
-                });
-            }
-        });
     });
 }
 
