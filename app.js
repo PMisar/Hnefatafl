@@ -84,37 +84,6 @@ function movePiece(fromRow, fromCol, toRow, toCol) {
     }
 }
 
-// function eliminateSurroundedPieces() {
-//     const directions = [
-//         [-1, 0], // Up
-//         [1, 0],  // Down
-//         [0, -1], // Left
-//         [0, 1]   // Right
-//     ];
-
-//     board.forEach((row, rowIndex) => {
-//         row.forEach((cell, colIndex) => {
-//             if (cell) {
-//                 directions.forEach(([dRow, dCol]) => {
-//                     const adj1 = board[rowIndex + dRow]?.[colIndex + dCol];
-//                     const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
-//                     if (
-//                         adj1 && adj2 &&
-//                         adj1 !== cell && adj2 !== cell &&
-//                         (adj1 === pieces.A || adj1 === pieces.D || adj1 === pieces.K) &&
-//                         (adj2 === pieces.A || adj2 === pieces.D || adj2 === pieces.K)
-//                     ) {
-//                         if ((cell === pieces.A && adj1 === pieces.D && adj2 === pieces.D) ||
-//                             (cell === pieces.D && adj1 === pieces.A && adj2 === pieces.A)) {
-//                             board[rowIndex][colIndex] = null;
-//                         }
-//                     }
-//                 });
-//             }
-//         });
-//     });
-// }
-
 function eliminateSurroundedPieces() {
     const directions = [
         [-1, 0], // Up
@@ -123,11 +92,17 @@ function eliminateSurroundedPieces() {
         [0, 1]   // Right
     ];
 
+    const restrictedTiles = [
+        [5, 5], [0, 0], [0, 10], [10, 0], [10, 10]
+    ];
+
     board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
-            if (cell === pieces.A || cell === pieces.D) { // Check both A and D pieces
+            if (cell === pieces.A || cell === pieces.D) { // Only check A and D pieces for elimination
                 directions.forEach(([dRow, dCol]) => {
-                    const adj1 = board[rowIndex + dRow]?.[colIndex + dCol];
+                    const adjRow = rowIndex + dRow;
+                    const adjCol = colIndex + dCol;
+                    const adj1 = board[adjRow]?.[adjCol];
                     const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
 
                     // Eliminate D piece if surrounded by A pieces (A D A)
@@ -145,6 +120,17 @@ function eliminateSurroundedPieces() {
                     ) {
                         board[rowIndex][colIndex] = null; // Remove the A piece
                     }
+
+                    // Check if piece is adjacent to a restricted tile and surrounded by opponent
+                    restrictedTiles.forEach(([resRow, resCol]) => {
+                        if (
+                            adjRow === resRow && adjCol === resCol &&
+                            ((cell === pieces.A && (adj2 === pieces.D || adj2 === pieces.K)) || // A eliminated by D or K
+                                (cell === pieces.D && adj2 === pieces.A)) // D eliminated by A only
+                        ) {
+                            board[rowIndex][colIndex] = null; // Remove the A or D piece
+                        }
+                    });
                 });
             }
         });
@@ -244,7 +230,7 @@ function updateTurnIndicator() {
 }
 
 const specialTiles = [
-    [5, 5] 
+    [5, 5]
 ];
 
 
@@ -289,7 +275,6 @@ function isValidMove(fromRow, fromCol, toRow, toCol) {
     }
     return false;
 }
-
 
 function highlightValidMoves(row, col) {
     clearHighlights();

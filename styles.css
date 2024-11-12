@@ -102,7 +102,6 @@ h1 {
   background-color: rgba(0, 100, 0, 0.3);
 }
 
-/* Exclude valid move styling for specific cells */
 .cell[data-row="0"][data-col="0"].valid-move,
 .cell[data-row="0"][data-col="10"].valid-move,
 .cell[data-row="10"][data-col="0"].valid-move,
