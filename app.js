@@ -68,23 +68,26 @@ document.getElementById('game-board').addEventListener('click', (event) => {
 
 function movePiece(fromRow, fromCol, toRow, toCol) {
     const piece = board[fromRow][fromCol];
+
     if (!isValidTurn(piece)) {
         return;
     }
 
     if (isValidMove(fromRow, fromCol, toRow, toCol)) {
-        board[toRow][toCol] = board[fromRow][fromCol];
+        board[toRow][toCol] = piece;
         board[fromRow][fromCol] = null;
         renderBoard();
-        eliminateSurroundedPieces();
+
+        capturePieces(toRow, toCol);
         renderBoard();
+
         if (!checkEndGame()) {
             switchTurn();
         }
     }
 }
 
-function eliminateSurroundedPieces() {
+function capturePieces(row, col) {
     const directions = [
         [-1, 0], // Up
         [1, 0],  // Down
@@ -92,51 +95,23 @@ function eliminateSurroundedPieces() {
         [0, 1]   // Right
     ];
 
-    const restrictedTiles = [
-        [5, 5], [0, 0], [0, 10], [10, 0], [10, 10]
-    ];
+    const currentPlayerPiece = board[row][col]; 
+    const opponentPiece = currentPlayerPiece === pieces.A ? pieces.D : pieces.A;
 
-    board.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-            if (cell === pieces.A || cell === pieces.D) { // Only check A and D pieces for elimination
-                directions.forEach(([dRow, dCol]) => {
-                    const adjRow = rowIndex + dRow;
-                    const adjCol = colIndex + dCol;
-                    const adj1 = board[adjRow]?.[adjCol];
-                    const adj2 = board[rowIndex - dRow]?.[colIndex - dCol];
+    directions.forEach(([dRow, dCol]) => {
+        const adjRow1 = row + dRow;
+        const adjCol1 = col + dCol;
+        const adjRow2 = row + 2 * dRow;
+        const adjCol2 = col + 2 * dCol;
 
-                    // Eliminate D piece if surrounded by A pieces (A D A)
-                    if (
-                        cell === pieces.D &&
-                        adj1 === pieces.A && adj2 === pieces.A
-                    ) {
-                        board[rowIndex][colIndex] = null; // Remove the D piece
-                    }
-
-                    // Eliminate A piece if surrounded by D and K pieces (D A K or K A D)
-                    if (
-                        cell === pieces.A &&
-                        ((adj1 === pieces.D && adj2 === pieces.K) || (adj1 === pieces.K && adj2 === pieces.D))
-                    ) {
-                        board[rowIndex][colIndex] = null; // Remove the A piece
-                    }
-
-                    // Check if piece is adjacent to a restricted tile and surrounded by opponent
-                    restrictedTiles.forEach(([resRow, resCol]) => {
-                        if (
-                            adjRow === resRow && adjCol === resCol &&
-                            ((cell === pieces.A && (adj2 === pieces.D || adj2 === pieces.K)) || // A eliminated by D or K
-                                (cell === pieces.D && adj2 === pieces.A)) // D eliminated by A only
-                        ) {
-                            board[rowIndex][colIndex] = null; // Remove the A or D piece
-                        }
-                    });
-                });
-            }
-        });
+        if (
+            board[adjRow1]?.[adjCol1] === opponentPiece &&
+            board[adjRow2]?.[adjCol2] === currentPlayerPiece
+        ) {
+            board[adjRow1][adjCol1] = null;
+        }
     });
 }
-
 
 function checkEndGame() {
     const corners = [
@@ -145,7 +120,6 @@ function checkEndGame() {
 
     let isGameOver = false;
 
-    // Check if K reaches a corner (Defenders win)
     corners.forEach(([r, c]) => {
         if (board[r][c] === pieces.K) {
             endGame('Defenders have won!');
@@ -153,7 +127,6 @@ function checkEndGame() {
         }
     });
 
-    // Check if K is surrounded by A on all four sides (Attackers win)
     board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
             if (cell === pieces.K) {
@@ -162,13 +135,11 @@ function checkEndGame() {
                 const left = board[rowIndex]?.[colIndex - 1];
                 const right = board[rowIndex]?.[colIndex + 1];
 
-                // King surrounded by Attackers on all four sides
                 if (up === pieces.A && down === pieces.A && left === pieces.A && right === pieces.A) {
                     endGame('Attackers have won!');
                     isGameOver = true;
                 }
 
-                // King on edge, surrounded by Attackers on three sides
                 if (isOnEdge(rowIndex, colIndex)) {
                     const adjacent = [up, down, left, right].filter(Boolean);
                     const surroundingAttackers = adjacent.filter(piece => piece === pieces.A).length;
@@ -182,7 +153,6 @@ function checkEndGame() {
     });
     return isGameOver;
 }
-
 
 function isOnEdge(row, col) {
     return row === 0 || row === boardSize - 1 || col === 0 || col === boardSize - 1;
@@ -243,7 +213,6 @@ function isValidMove(fromRow, fromCol, toRow, toCol) {
         return false;
     }
 
-    // Check if the move is to the special tile and only allow King
     if (specialTiles.some(([r, c]) => r === toRow && c === toCol) && board[fromRow][fromCol] !== pieces.K) {
         return false;
     }
